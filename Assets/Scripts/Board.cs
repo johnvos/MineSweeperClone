@@ -98,13 +98,13 @@ public class Board : MonoBehaviour
     private List<int> GetNeighboringIndices(int index) {
         List<int> neighbors = new List<int>();
         int right = index + 1;
-        if (right < width && right < width * height && right % width != 0) neighbors.Add(right);
+        if (right < width * height && right % width != 0) neighbors.Add(right);
 
         int left = index - 1;
-        if (left > 0 && left % width != width - 1) neighbors.Add(left);
+        if (left >= 0 && left % width != width - 1) neighbors.Add(left);
 
         int top = index - width;
-        if (top > 0) {
+        if (top >= 0) {
             neighbors.Add(top);
         }
 
@@ -113,26 +113,32 @@ public class Board : MonoBehaviour
             neighbors.Add(bottom);
         }
 
+        //string debugging = "";
+        //foreach(int x in neighbors) {
+        //    debugging += x.ToString() + " ";
+        //}
+        //Debug.Log("For index " + index + ": " + debugging);
+
         return neighbors;
     }
 
     private List<int> GetSurroundingIndices(int index) {
         List<int> neighbors = new List<int>();
         int right = index + 1;
-        if (right < width && right < width * height && right%width!=0) neighbors.Add(right);
+        if (right < width * height && right%width!=0) neighbors.Add(right);
         
         int left = index - 1;
-        if (left > 0 && left%width!=width-1) neighbors.Add(left);
+        if (left >= 0 && left%width!=width-1) neighbors.Add(left);
 
         int top = index - width;
-        if (top > 0) {
+        if (top >= 0) {
             neighbors.Add(top);
 
             int tr = top + 1;
             if (tr % width != 0) neighbors.Add(tr);
 
             int tl = top - 1;
-            if (tl % width != width - 1) neighbors.Add(tl);
+            if (tl % width != width - 1 && tl>=0) neighbors.Add(tl);
         }
         
         int bottom = index + width;
@@ -145,6 +151,12 @@ public class Board : MonoBehaviour
             int bl = bottom - 1;
             if (bl % width != width - 1) neighbors.Add(bl);
         }
+
+        //string debugging = "";
+        //foreach(int x in neighbors) {
+        //    debugging += x.ToString() + " ";
+        //}
+        //Debug.Log("For index " + index + ": " + debugging);
 
         return neighbors;
     }
@@ -201,11 +213,15 @@ public class Board : MonoBehaviour
             return;
         }
 
+        if(fullInfo[clicked] == BlockInfo.State.Count) {
+            return;
+        }
 
         //TODO: this is causing infinite loop.
         // Probably because I'm checking already opened blocks as well
         // gosh this is too cumbersome but what choices do I have
         // hehe
+
         List<int> openList = FindAllOpenableNeighbors(clicked);
         foreach(int x in openList) {
             gameBoard[x].Open();
@@ -229,10 +245,13 @@ public class Board : MonoBehaviour
 
         if(!gameBoard[index].IsOpen() && (fullInfo[index] == BlockInfo.State.Count || fullInfo[index] == BlockInfo.State.None)) {
             list.Add(index);
-            List<int> neighbors = GetNeighboringIndices(index);
-            foreach(int x in neighbors) {
-                Recurse(x, ref list);
+            if (fullInfo[index] == BlockInfo.State.None) {
+                List<int> neighbors = GetNeighboringIndices(index);
+                foreach (int x in neighbors) {
+                    Recurse(x, ref list);
+                }
             }
+
         }
     }
 
