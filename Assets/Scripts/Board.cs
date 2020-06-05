@@ -19,6 +19,8 @@ public class Board : MonoBehaviour
     bool start;
     double scale;
 
+    int gameState = -2; // -2: not spawned, -1: not intialized, 0: game not done, 1: game won, 99: mine exploded
+
     private void Awake() {
         start = false;
 
@@ -69,6 +71,8 @@ public class Board : MonoBehaviour
                 fullInfo.Add(BlockInfo.State.None);
             }
         }
+
+        gameState = -1;
     }
 
     public void ClickLeft(int x, int y) {
@@ -86,6 +90,14 @@ public class Board : MonoBehaviour
 
         infoBoard[CoordToIndex(x, y)].CycleThroughStates();
     }
+
+    public int GetCurrentGameState() {
+        return gameState;
+    }
+
+    //---------------------------------------------------------------------------------------
+    //---------------------------------------------------------------------------------------
+    //---------------------------------------------------------------------------------------
 
     private int CoordToIndex(int x, int y) {
         return (width * y + x);
@@ -197,7 +209,7 @@ public class Board : MonoBehaviour
         }
 
         Open(gameBoard[CoordToIndex(x,y)]);
-        
+        gameState = 0;
     }
 
 
@@ -214,18 +226,19 @@ public class Board : MonoBehaviour
 
         if(fullInfo[clicked] == BlockInfo.State.Mine) {
             Debug.Log("MINE!!! YOU DEAD BRO");
+            gameState = 99;
             return;
         }
 
-        if(fullInfo[clicked] == BlockInfo.State.Count) {
-            return;
+        if(fullInfo[clicked] != BlockInfo.State.Count) {
+            List<int> openList = FindAllOpenableNeighbors(clicked);
+            foreach (int x in openList) {
+                gameBoard[x].Open();
+                infoBoard[x].Open(fullInfo[x]);
+            }
         }
 
-        List<int> openList = FindAllOpenableNeighbors(clicked);
-        foreach(int x in openList) {
-            gameBoard[x].Open();
-            infoBoard[x].Open(fullInfo[x]);
-        }
+        CheckBoard();
     }
 
     private List<int> FindAllOpenableNeighbors(int index) {
@@ -255,6 +268,18 @@ public class Board : MonoBehaviour
             }
 
         }
+    }
+
+    private void CheckBoard() { // Checks if all mines are found
+        int unopenedBlocks = 0;
+        foreach(Block x in gameBoard) {
+            if (!x.IsOpen()) unopenedBlocks++;
+        }
+        if (unopenedBlocks == MineCount) {
+            gameState = 1;
+            Debug.Log("Hey I think you won");
+        }
+        Debug.Log("Unopened Blocks: " + unopenedBlocks);
     }
 
 }
