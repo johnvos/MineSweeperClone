@@ -12,9 +12,9 @@ public class Board : MonoBehaviour
 
     List<BlockInfo.State> fullInfo;
 
-    public int width = 10;
-    public int height = 10;
-    public int MineCount = 10;
+    public int width = 8;
+    public int height = 5;
+    public int MineCount = 5;
 
     bool start;
     double scale;
@@ -36,12 +36,6 @@ public class Board : MonoBehaviour
         SpawnBoard();
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
-
     void SpawnBoard() {
         
         Vector3 zerozero = new Vector3(-width/2f, height/2f, 0);
@@ -55,8 +49,8 @@ public class Board : MonoBehaviour
         }
 
 
-        for (int i = 0; i < width; i++) {
-            for(int j = 0; j < height; j++) {
+        for (int j = 0; j < height; j++) {
+            for(int i = 0; i < width; i++) {
                 Vector3 offset = new Vector3(i, -j, 0);
                 Vector3 infoOffset = new Vector3(i, -j, -1);
 
@@ -88,7 +82,9 @@ public class Board : MonoBehaviour
     }
 
     public void ClickRight(int x, int y) {
+        if (gameBoard[CoordToIndex(x, y)].IsOpen()) return;
 
+        infoBoard[CoordToIndex(x, y)].CycleThroughStates();
     }
 
     private int CoordToIndex(int x, int y) {
@@ -162,11 +158,19 @@ public class Board : MonoBehaviour
     }
 
     private void InitializeBoard(int x, int y) { //intialize, with (x,y) guaranteed no-mine
+        Block block = gameBoard[CoordToIndex(x, y)];
+        int clicked = CoordToIndex(block.GetX(), block.GetY());
+
+        if (infoBoard[clicked].GetCurrentState() == BlockInfo.State.Cross
+            || infoBoard[clicked].GetCurrentState() == BlockInfo.State.Flag) {
+            return; //because we don't wanna open crossed or flagged
+        }
+
         start = true;
 
         System.Random rand = new System.Random();
         //Initialize Mine
-        for(int i = 0; i <= MineCount; i++) {
+        for(int i = 0; i < MineCount; i++) {
             int randIndex = -1;
             do {
                 randIndex = rand.Next(width * height);
@@ -200,13 +204,13 @@ public class Board : MonoBehaviour
     private void Open(Block block) {
         int clicked = CoordToIndex(block.GetX(), block.GetY());
 
-        if(fullInfo[clicked]==BlockInfo.State.Cross 
-            || fullInfo[clicked]==BlockInfo.State.Flag) {
+        if(infoBoard[clicked].GetCurrentState()==BlockInfo.State.Cross 
+            || infoBoard[clicked].GetCurrentState()==BlockInfo.State.Flag) {
             return; //because we don't wanna open crossed or flagged
         }
 
         gameBoard[clicked].Open();
-        infoBoard[clicked].Open();
+        infoBoard[clicked].Open(fullInfo[clicked]);
 
         if(fullInfo[clicked] == BlockInfo.State.Mine) {
             Debug.Log("MINE!!! YOU DEAD BRO");
@@ -217,15 +221,10 @@ public class Board : MonoBehaviour
             return;
         }
 
-        //TODO: this is causing infinite loop.
-        // Probably because I'm checking already opened blocks as well
-        // gosh this is too cumbersome but what choices do I have
-        // hehe
-
         List<int> openList = FindAllOpenableNeighbors(clicked);
         foreach(int x in openList) {
             gameBoard[x].Open();
-            infoBoard[x].Open();
+            infoBoard[x].Open(fullInfo[x]);
         }
     }
 
@@ -243,8 +242,11 @@ public class Board : MonoBehaviour
     private void Recurse(int index, ref List<int> list) {
         if (list.Contains(index)) return;
 
-        if(!gameBoard[index].IsOpen() && (fullInfo[index] == BlockInfo.State.Count || fullInfo[index] == BlockInfo.State.None)) {
+        if (!gameBoard[index].IsOpen()
+            && (fullInfo[index] == BlockInfo.State.Count || fullInfo[index] == BlockInfo.State.None)
+            && (infoBoard[index].GetCurrentState() != BlockInfo.State.Flag && infoBoard[index].GetCurrentState() != BlockInfo.State.Cross)) {
             list.Add(index);
+            Debug.Log("Just added a block of state " + infoBoard[index].GetCurrentState());
             if (fullInfo[index] == BlockInfo.State.None) {
                 List<int> neighbors = GetNeighboringIndices(index);
                 foreach (int x in neighbors) {

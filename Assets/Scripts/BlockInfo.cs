@@ -66,7 +66,28 @@ public class BlockInfo : MonoBehaviour
         neighborMineCount = count;
     }
 
-    public void Open() {
+    public void Open(BlockInfo.State state) {
         open = true;
+        currentState = state;
+    }
+
+    public void CycleThroughStates() {
+        switch (currentState) {
+            case State.None:
+            case State.Count:
+            case State.Mine:
+                currentState = State.Flag;
+                break;
+            case State.Flag:
+                currentState = State.Cross;
+                break;
+            case State.Cross:
+                currentState = State.None;
+                break;
+        }
+    }
+
+    public BlockInfo.State GetCurrentState() {
+        return currentState;
     }
 }
