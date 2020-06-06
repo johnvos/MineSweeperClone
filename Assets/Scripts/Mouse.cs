@@ -4,6 +4,12 @@ using UnityEngine;
 
 public class Mouse : MonoBehaviour
 {
+    bool gameOver;
+
+    private void Awake() {
+        gameOver = false;
+    }
+
     private void Update() {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
@@ -14,7 +20,7 @@ public class Mouse : MonoBehaviour
 
         if (hit.transform == null) return;
 
-        if (hit.transform.CompareTag("Block")) {
+        if (hit.transform.CompareTag("Block") && !gameOver) {
 
             Block block = hit.transform.gameObject.GetComponent<Block>();
 
@@ -26,5 +32,9 @@ public class Mouse : MonoBehaviour
                 block.MouseRightDown();
             }
         }
+    }
+
+    public void GameOver() {
+        gameOver = true;
     }
 }

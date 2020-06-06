@@ -71,6 +71,11 @@ public class BlockInfo : MonoBehaviour
         currentState = state;
     }
 
+    public void Close() {
+        open = false;
+        currentState = BlockInfo.State.None;
+    }
+
     public void CycleThroughStates() {
         switch (currentState) {
             case State.None:

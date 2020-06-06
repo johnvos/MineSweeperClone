@@ -9,16 +9,19 @@ public class Block : MonoBehaviour
     public Sprite BlockPressed;
     public Sprite BlockOpen;
 
-    bool open = false;
+    bool open;
 
-    int x = -1;
-    int y = -1;
+    int x;
+    int y;
 
     SpriteRenderer sr;
     Board parent;
 
     private void Awake() {
         sr = GetComponent<SpriteRenderer>();
+        x = -1;
+        y = -1;
+        open = false;
     }
 
     private void Update() {
@@ -57,6 +60,11 @@ public class Block : MonoBehaviour
 
     public void Open() {
         open = true;
+        StopAllCoroutines();
+    }
+
+    public void Close() {
+        open = false;
         StopAllCoroutines();
     }
 

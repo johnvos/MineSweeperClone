@@ -5,40 +5,40 @@ public class Board : MonoBehaviour
 {
     public GameObject BlockPrefab;
     public GameObject BlockInfoPrefab;
+    public GameObject BoundaryBlockPrefab;
 
-    Camera mainCam;
     List<Block> gameBoard;
     List<BlockInfo> infoBoard;
 
     List<BlockInfo.State> fullInfo;
 
-    public int width = 8;
-    public int height = 5;
-    public int MineCount = 5;
+    int width;
+    int height;
+    int MineCount;
 
     bool start;
     double scale;
 
-    int gameState = -2; // -2: not spawned, -1: not intialized, 0: game not done, 1: game won, 99: mine exploded
+    int gameState; // -2: not spawned, -1: not intialized, 0: game not done, 1: game won, 99: mine exploded
 
-    private void Awake() {
+    public void SetupBoard(int width, int height, int MineCount) {
+        this.width = width;
+        this.height = height;
+        this.MineCount = MineCount;
+
+        if (MineCount >= width * height) {
+            throw new System.Exception("MineCount is too high.\nCurrent width: " + width + "\nCurrent height: " + height + "\nMax minecount: " + width * height);
+        }
+
         start = false;
-
-        mainCam = Camera.main;
+        gameState = -2;
 
         gameBoard = new List<Block>(width * height);
         infoBoard = new List<BlockInfo>(width * height);
         fullInfo = new List<BlockInfo.State>(width * height);
     }
 
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        SpawnBoard();
-    }
-
-    void SpawnBoard() {
+    public void SpawnBoard() {
         
         Vector3 zerozero = new Vector3(-width/2f, height/2f, 0);
 
@@ -50,9 +50,9 @@ public class Board : MonoBehaviour
             zerozero += new Vector3(0, -0.5f, 0);
         }
 
-
         for (int j = 0; j < height; j++) {
             for(int i = 0; i < width; i++) {
+                //spawning inner blocks
                 Vector3 offset = new Vector3(i, -j, 0);
                 Vector3 infoOffset = new Vector3(i, -j, -1);
 
@@ -69,8 +69,49 @@ public class Board : MonoBehaviour
                 infoBoard.Add(blockInfo);
 
                 fullInfo.Add(BlockInfo.State.None);
+
+                //spawning outer boundaries
+                
+                //left boundaries
+                if(i == 0) {
+                    Vector3 leftOffset = new Vector3(-1, -j);
+
+                    Instantiate(BoundaryBlockPrefab, zerozero + leftOffset, Quaternion.identity).GetComponent<BoundaryBlock>().SetPosition(4);
+                }
+
+                //right boundaries
+                if(i == width - 1) {
+                    Vector3 rightOffset = new Vector3(width, -j);
+
+                    Instantiate(BoundaryBlockPrefab, zerozero + rightOffset, Quaternion.identity).GetComponent<BoundaryBlock>().SetPosition(6);
+                }
+
+                //top boundaries
+                if(j == 0) {
+                    Vector3 topOffset = new Vector3(i, 1);
+
+                    Instantiate(BoundaryBlockPrefab, zerozero + topOffset, Quaternion.identity).GetComponent<BoundaryBlock>().SetPosition(8);
+                }
+
+                //bottom boundaries
+                if(j == height - 1) {
+                    Vector3 bottomOffset = new Vector3(i, -height);
+
+                    Instantiate(BoundaryBlockPrefab, zerozero + bottomOffset, Quaternion.identity).GetComponent<BoundaryBlock>().SetPosition(2);
+                }
+
+                //TL
+                Instantiate(BoundaryBlockPrefab, zerozero + new Vector3(-1,1), Quaternion.identity).GetComponent<BoundaryBlock>().SetPosition(7);
+                //TR
+                Instantiate(BoundaryBlockPrefab, zerozero + new Vector3(width, 1), Quaternion.identity).GetComponent<BoundaryBlock>().SetPosition(9);
+                //BL
+                Instantiate(BoundaryBlockPrefab, zerozero + new Vector3(-1, -height), Quaternion.identity).GetComponent<BoundaryBlock>().SetPosition(1);
+                //BR
+                Instantiate(BoundaryBlockPrefab, zerozero + new Vector3(width, -height), Quaternion.identity).GetComponent<BoundaryBlock>().SetPosition(3);
+
             }
         }
+
 
         gameState = -1;
     }
