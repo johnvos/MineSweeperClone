@@ -11,6 +11,8 @@ public class GameManager : MonoBehaviour
     public int height;
     public int minecount;
 
+    public GameObject[] boundaryBlocks = new GameObject[11];
+
     bool gameEnded;
 
     private void Awake() {
@@ -57,5 +59,10 @@ public class GameManager : MonoBehaviour
             cameraSize = height / 2 + height % 2 + 2;
         }
         Camera.main.orthographicSize = cameraSize;
+    }
+
+    void ResizeBoundary() {
+        boundaryBlocks[2].transform.localScale = new Vector3(width, 1);
+        boundaryBlocks[5].transform.localScale = new Vector3(width, 1);
     }
 }
